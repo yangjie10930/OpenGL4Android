@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Camera2RecordDemo</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="permission_request">权限申请</string>
+    <string name="record">开始</string>
+    <string name="stop">停止</string>
+    <string name="camera_error">摄像头错误</string>
+    <string name="intro_message">信息</string>
+</resources>
