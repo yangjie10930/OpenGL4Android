@@ -110,7 +110,13 @@ public class Camera2Fragment extends Fragment
 	/**
 	 * Button to record video
 	 */
-	private Button mButtonVideo;
+	private Button mButtonVideo, mChangeCamera;
+
+	/**
+	 *
+	 */
+	private int mUserCamera = 0;
+	private String[] mCameraList;
 
 	/**
 	 * A refernce to the opened {@link android.hardware.camera2.CameraDevice}.
@@ -296,6 +302,8 @@ public class Camera2Fragment extends Fragment
 		mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
 		mButtonVideo = (Button) view.findViewById(R.id.video);
 		mButtonVideo.setOnClickListener(this);
+		mChangeCamera = (Button) view.findViewById(R.id.change);
+		mChangeCamera.setOnClickListener(this);
 	}
 
 	@Override
@@ -327,8 +335,25 @@ public class Camera2Fragment extends Fragment
 				}
 				break;
 			}
+
+			case R.id.change:
+				changeCamera();
+				break;
 		}
 	}
+
+	/**
+	 *
+	 */
+	private void changeCamera() {
+		if (mCameraList.length > 1) {
+			closeCamera();
+			mUserCamera += 1;
+			if(mUserCamera > mCameraList.length - 1) mUserCamera = 0;
+			openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+		}
+	}
+
 
 	/**
 	 * Starts a background thread and its {@link Handler}.
@@ -429,8 +454,10 @@ public class Camera2Fragment extends Fragment
 			if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
 				throw new RuntimeException("Time out waiting to lock camera opening.");
 			}
-			String cameraId = manager.getCameraIdList()[0];
-
+			if (mCameraList == null) {
+				mCameraList = manager.getCameraIdList();
+			}
+			String cameraId = mCameraList[mUserCamera];
 			// Choose the sizes for camera preview and video recording
 			CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
 			StreamConfigurationMap map = characteristics
