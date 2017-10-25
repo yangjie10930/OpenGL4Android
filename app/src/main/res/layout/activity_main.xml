@@ -4,11 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
     <LinearLayout
         android:id="@+id/ff_ll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
+        <Button
+            android:id="@+id/go_camera"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="滤镜—录像"
+            android:onClick="onClick"/>
+
+        <Button
+            android:id="@+id/go_mp4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="滤镜—本地"
+            android:onClick="onClick"/>
 
     </LinearLayout>
 

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+
+    <!--<SurfaceView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:id="@+id/mSurface" />-->
+
+    <TextureView
+        android:id="@+id/mTexture"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <com.joe.camera2recorddemo.View.WheelView.WheelView
+        android:id="@+id/change_fliter"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/filterchoose_backgroud"
+        app:wheelItemCount="2"
+        app:wheelItemSize="45dp"
+        app:wheelDividerSize="0dp"
+        app:dividerColor="#00ffffff"
+        app:wheelOrientation="horizontal"
+        app:wheelTextSize="14sp"
+        app:wheelTextColor="#ffffff"
+        app:wheelTextColorCenter="#8EE5EE"/>
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:text="开始"
+        android:clickable="true"
+        android:onClick="onClick"
+        android:id="@+id/mTvStart"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/record_start"/>
+
+    <Button
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:onClick="onClick"
+        android:id="@+id/mChange"
+        android:background="@drawable/change_camera"/>
+
+
+</RelativeLayout>

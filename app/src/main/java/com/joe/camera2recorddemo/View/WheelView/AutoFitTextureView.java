@@ -1,4 +1,4 @@
-package com.joe.camera2recorddemo;
+package com.joe.camera2recorddemo.View.WheelView;
 
 import android.content.Context;
 import android.util.AttributeSet;

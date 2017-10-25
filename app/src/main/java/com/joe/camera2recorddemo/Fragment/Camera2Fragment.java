@@ -1,4 +1,4 @@
-package com.joe.camera2recorddemo;
+package com.joe.camera2recorddemo.Fragment;
 
 /**
  * Created by Administrator on 2017/7/10.
@@ -60,6 +60,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.joe.camera2recorddemo.R;
+import com.joe.camera2recorddemo.View.WheelView.AutoFitTextureView;
 
 import java.io.IOException;
 import java.util.ArrayList;
