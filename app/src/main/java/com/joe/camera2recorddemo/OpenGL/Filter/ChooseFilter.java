@@ -9,6 +9,10 @@ package com.joe.camera2recorddemo.OpenGL.Filter;
 import android.content.res.Resources;
 import android.opengl.GLES20;
 
+import com.joe.camera2recorddemo.OpenGL.TransUtil;
+import com.joe.camera2recorddemo.OpenGL.Transformation;
+import com.joe.camera2recorddemo.Utils.MatrixUtils;
+
 /**
  * 滤镜集合
  */
@@ -32,15 +36,14 @@ public class ChooseFilter extends Filter {
 
 	public ChooseFilter(Resources resource) {
 		super(resource, "shader/choose/choose.vert", "shader/choose/choose.frag");
-
 	}
 
 	@Override
 	protected void onCreate() {
 		super.onCreate();
 		hChangeType = GLES20.glGetUniformLocation(mGLProgram, "vChangeType");
-		mGLWidth=GLES20.glGetUniformLocation(mGLProgram,"uWidth");
-		mGLHeight=GLES20.glGetUniformLocation(mGLProgram,"uHeight");
+		mGLWidth = GLES20.glGetUniformLocation(mGLProgram, "uWidth");
+		mGLHeight = GLES20.glGetUniformLocation(mGLProgram, "uHeight");
 		mUniformTexelWidthLocation = GLES20.glGetUniformLocation(mGLProgram, "texelWidth");
 		mUniformTexelHeightLocation = GLES20.glGetUniformLocation(mGLProgram, "texelHeight");
 	}
@@ -57,11 +60,11 @@ public class ChooseFilter extends Filter {
 	protected void onSetExpandData() {
 		super.onSetExpandData();
 		GLES20.glUniform1i(hChangeType, hFilterCode);
-		if(needGLWH){
-			GLES20.glUniform1f(mGLWidth,width);
-			GLES20.glUniform1f(mGLHeight,height);
+		if (needGLWH) {
+			GLES20.glUniform1f(mGLWidth, width);
+			GLES20.glUniform1f(mGLHeight, height);
 		}
-		if(needTexelWH) {
+		if (needTexelWH) {
 			GLES20.glUniform1f(mUniformTexelWidthLocation, mTexelWidth);
 			GLES20.glUniform1f(mUniformTexelHeightLocation, mTexelHeight);
 		}
@@ -74,7 +77,7 @@ public class ChooseFilter extends Filter {
 	 */
 	public void setChangeType(int code) {
 		this.hFilterCode = code;
-		switch (code){
+		switch (code) {
 			case FilterType.TOON:
 				needTexelWH = true;
 				setTextlSize(4.2f);
@@ -97,7 +100,7 @@ public class ChooseFilter extends Filter {
 		}
 	}
 
-	private void setTextlSize(float size){
+	private void setTextlSize(float size) {
 		mTexelWidth = size / width;
 		mTexelHeight = size / height;
 	}

@@ -38,10 +38,6 @@
             android:name=".Activity.MP4Activity"
             android:theme="@style/Theme.AppCompat.NoActionBar">>
         </activity>
-        <activity android:name=".Activity.MediaPlayerActivity">
-        </activity>
-        <activity android:name=".Activity.MP4ActivityBF">
-        </activity>
     </application>
 
 </manifest>

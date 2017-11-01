@@ -219,7 +219,7 @@ public class Mp4Processor {
 						videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, mOutputVideoHeight * mOutputVideoWidth * 5);
 						videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 24);
 						videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-						videoFormat.setInteger(MediaFormat.KEY_ROTATION,0);
+//						videoFormat.setInteger(MediaFormat.KEY_ROTATION,0);
 						mVideoEncoder = MediaCodec.createEncoderByType(/*mime*/"video/avc");
 						mVideoEncoder.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 						mOutputSurface = mVideoEncoder.createInputSurface();
@@ -422,6 +422,7 @@ public class Mp4Processor {
 		if (mRenderer == null) {
 			mRenderer = new WrapRenderer(null);
 		}
+		mRenderer.setFlag(WrapRenderer.TYPE_MOVE);
 		mRenderer.create();
 		mRenderer.sizeChanged(mOutputVideoWidth, mOutputVideoHeight);
 		while (mGLThreadFlag) {

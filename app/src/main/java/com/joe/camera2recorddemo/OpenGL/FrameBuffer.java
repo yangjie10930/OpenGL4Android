@@ -3,7 +3,7 @@ package com.joe.camera2recorddemo.OpenGL;
 import android.opengl.GLES20;
 
 /**
- * Created by aiya on 2017/9/13.
+ * Created by Yj on 2017/9/13.
  */
 
 public class FrameBuffer {

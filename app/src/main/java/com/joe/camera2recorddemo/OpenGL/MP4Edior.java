@@ -123,19 +123,12 @@ public class MP4Edior {
 			if (mRenderer == null) {
 				mRenderer = new WrapRenderer(null);
 			}
-			mRenderer.setFlag(WrapRenderer.TYPE_CAMERA);
+			mRenderer.setFlag(WrapRenderer.TYPE_SURFACE);
 			mRenderer.create();
 			int[] t = new int[1];
 			GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, t, 0);
 			mRenderer.sizeChanged(mPreviewWidth, mPreviewHeight);
 			GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, t[0]);
-
-			Filter mShowFilter = new BaseFilter();
-			MatrixUtils.flip(mShowFilter.getVertexMatrix(), false, true);
-			mShowFilter.create();
-			mShowFilter.sizeChanged(mPreviewWidth, mPreviewHeight);
-
-//			FrameBuffer mEncodeFrameBuffer = new FrameBuffer();
 			while (mGLThreadFlag) {
 				try {
 					mSem.acquire();
@@ -143,7 +136,6 @@ public class MP4Edior {
 					e.printStackTrace();
 				}
 				if (mGLThreadFlag) {
-//					long time = (System.currentTimeMillis() - BASE_TIME) * 1000;
 					mInputTexture.updateTexImage();
 					mInputTexture.getTransformMatrix(mRenderer.getTextureMatrix());
 					synchronized (VIDEO_LOCK) {

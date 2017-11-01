@@ -16,6 +16,7 @@ class WrapRenderer implements Renderer{
 
     public static final int TYPE_MOVE=0;
     public static final int TYPE_CAMERA=1;
+    public static final int TYPE_SURFACE=2;
 
     public WrapRenderer(Renderer renderer){
         this.mRenderer=renderer;
@@ -27,14 +28,26 @@ class WrapRenderer implements Renderer{
     }
 
     public void setFlag(int flag){
-        if(flag==TYPE_MOVE){
-            mFilter.setVertexCo(MatrixUtils.getOriginalVertexCo());
+        if(flag==TYPE_SURFACE){
+            mFilter.setVertexCo(new float[]{
+                    -1.0f, -1.0f,
+                    -1.0f, 1.0f,
+                    1.0f, -1.0f,
+                    1.0f, 1.0f,
+            });
         }else if(flag==TYPE_CAMERA){
             mFilter.setVertexCo(new float[]{
                     -1.0f, 1.0f,
                     1.0f, 1.0f,
                     -1.0f, -1.0f,
                     1.0f, -1.0f,
+            });
+        }else if(flag==TYPE_MOVE){
+            mFilter.setVertexCo(new float[]{
+                    1.0f, -1.0f,
+                    -1.0f, -1.0f,
+                    1.0f, 1.0f,
+                    -1.0f, 1.0f,
             });
         }
     }
