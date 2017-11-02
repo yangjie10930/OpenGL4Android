@@ -36,7 +36,6 @@ import java.util.List;
 public class MP4Activity extends AppCompatActivity implements View.OnClickListener, TextureView.SurfaceTextureListener {
 
 	private TextureView textureView;
-	private VideoDecode mVideoDecode;
 	private String videoPath;
 	private Surface mSurface;
 
@@ -75,7 +74,6 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 		//其他
 		textureView = (TextureView) findViewById(R.id.mp4_ttv);
-		mVideoDecode = new VideoDecode();
 		mProcessor = new Mp4Processor();
 	}
 
@@ -117,15 +115,16 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 				if (path != null) {
 					Log.v("MP4Activity", "path:" + path);
 					videoPath = path;
-					mVideoDecode.stop();
+					mp4Edior.stop();
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							mVideoDecode.start();
+							mp4Edior.start();
 							textureView.setSurfaceTextureListener(MP4Activity.this);
-							mVideoDecode.setLoop(true);
-							mVideoDecode.decodePrepare(videoPath);
-							mVideoDecode.excuate();
+							mp4Edior.setLoop(true);
+							mp4Edior.decodePrepare(videoPath);
+							mp4Edior.setScale(Transformation.SCALE_TYPE_CENTER_INSIDE);
+							mp4Edior.excuate();
 						}
 					}).start();
 				}
@@ -139,11 +138,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 		mWidth = width;
 		mHeight = height;
 		mSurface = new Surface(surface);
-		mp4Edior.setOutputSurface(mSurface);
+		mp4Edior.setOutputSurface(mSurface,width,height);
 		mp4Edior.setRenderer(new Renderer() {
 			@Override
 			public void create() {
-				mVideoDecode.setSurface(new Surface(mp4Edior.createInputSurfaceTexture()));
 				mMp4EditFilter.create();
 			}
 
@@ -163,14 +161,13 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 				mMp4EditFilter.destroy();
 			}
 		});
-		mp4Edior.setPreviewSize(width, height);
 		mp4Edior.startPreview();
 	}
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
 		Log.v("MP4Activity", "+++onSurfaceTextureSizeChanged+++" + width + "," + height);
-		mp4Edior.setPreviewSize(width, height);
+		mp4Edior.setOutputSurface(mSurface,width,height);
 	}
 
 	@Override
@@ -228,7 +225,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	@Override
 	protected void onDestroy() {
-		mVideoDecode.stop();
+		mp4Edior.stop();
 		super.onDestroy();
 	}
 

@@ -110,4 +110,42 @@ public enum MatrixUtils {
         return m;
     }
 
+    /**
+     * 获取Surface的顶点坐标系
+     * @return
+     */
+    public static float[] getSurfaceVertexCo(){
+        return new float[]{
+                -1.0f, -1.0f,
+                -1.0f, 1.0f,
+                1.0f, -1.0f,
+                1.0f, 1.0f,
+        };
+    }
+
+    /**
+     * 获取Camera的顶点坐标系
+     * @return
+     */
+    public static float[] getCameraVertexCo(){
+        return new float[]{
+                -1.0f, 1.0f,
+                1.0f, 1.0f,
+                -1.0f, -1.0f,
+                1.0f, -1.0f,
+        };
+    }
+
+    /**
+     * 获取本地视频处理的顶点坐标系
+     * @return
+     */
+    public static float[] getMoveVertexCo(){
+        return new float[]{
+                1.0f, -1.0f,
+                -1.0f, -1.0f,
+                1.0f, 1.0f,
+                -1.0f, 1.0f,
+        };
+    }
 }

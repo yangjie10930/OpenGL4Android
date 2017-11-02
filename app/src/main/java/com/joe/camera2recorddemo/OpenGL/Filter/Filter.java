@@ -18,6 +18,8 @@ public abstract class Filter implements Renderer {
     private float[] mVertexMatrix= MatrixUtils.getOriginalMatrix();
     private float[] mTextureMatrix=MatrixUtils.getOriginalMatrix();
 
+    private float[] mVertexCo;
+
     protected FloatBuffer mVertexBuffer;
     protected FloatBuffer mTextureBuffer;
 
@@ -63,6 +65,7 @@ public abstract class Filter implements Renderer {
     }
 
     public void setVertexCo(float[] vertexCo){
+        mVertexCo = vertexCo;
         mVertexBuffer.clear();
         mVertexBuffer.put(vertexCo);
         mVertexBuffer.position(0);
@@ -97,6 +100,8 @@ public abstract class Filter implements Renderer {
     public float[] getTextureMatrix(){
         return mTextureMatrix;
     }
+
+    public float[] getVertexCo() { return mVertexCo;}
 
     protected void shaderNeedTextureSize(boolean need){
         this.isUseSize=need;

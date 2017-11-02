@@ -1,8 +1,6 @@
 package com.joe.camera2recorddemo.OpenGL;
 
 
-import java.util.Arrays;
-
 /**
  * Created by Yj on 2017/10/30.
  * 变换的帮助类
@@ -11,7 +9,6 @@ import java.util.Arrays;
 public class TransUtil {
 
 	public static float[] textureCoords;
-
 	/**
 	 * 获得变换后的数据
 	 * @param tc 				原始数据
@@ -113,6 +110,67 @@ public class TransUtil {
 				break;
 		}
 	}
+
+	/**
+	 * 缩放变换
+	 * @param vertices 		顶点坐标系
+	 * @param inputWidth 	输入宽度
+	 * @param inputHeight 	输入高度
+	 * @param outputWidth	输出宽度
+	 * @param outputHeight	输出高度
+	 * @param scaleType		缩放类型
+	 * @return
+	 */
+	public static float[] resolveScale(float[] vertices,int inputWidth, int inputHeight, int outputWidth, int outputHeight,
+							  int scaleType) {
+		if (scaleType == Transformation.SCALE_TYPE_FIT_XY) {
+			// The default is FIT_XY
+			return vertices;
+		}
+
+		// Note: scale type need to be implemented by adjusting
+		// the vertices (not textureCoords).
+		if (inputWidth * outputHeight == inputHeight * outputWidth) {
+			// Optional optimization: If input w/h aspect is the same as output's,
+			// there is no need to adjust vertices at all.
+			return vertices;
+		}
+
+		float inputAspect = inputWidth / (float) inputHeight;
+		float outputAspect = outputWidth / (float) outputHeight;
+
+		if (scaleType == Transformation.SCALE_TYPE_CENTER_CROP) {
+			if (inputAspect < outputAspect) {
+				float heightRatio = outputAspect / inputAspect;
+				vertices[1] *= heightRatio;
+				vertices[3] *= heightRatio;
+				vertices[5] *= heightRatio;
+				vertices[7] *= heightRatio;
+			} else {
+				float widthRatio = inputAspect / outputAspect;
+				vertices[0] *= widthRatio;
+				vertices[2] *= widthRatio;
+				vertices[4] *= widthRatio;
+				vertices[6] *= widthRatio;
+			}
+		} else if (scaleType == Transformation.SCALE_TYPE_CENTER_INSIDE) {
+			if (inputAspect < outputAspect) {
+				float widthRatio = inputAspect / outputAspect;
+				vertices[0] *= widthRatio;
+				vertices[2] *= widthRatio;
+				vertices[4] *= widthRatio;
+				vertices[6] *= widthRatio;
+			} else {
+				float heightRatio = outputAspect / inputAspect;
+				vertices[1] *= heightRatio;
+				vertices[3] *= heightRatio;
+				vertices[5] *= heightRatio;
+				vertices[7] *= heightRatio;
+			}
+		}
+		return vertices;
+	}
+
 
 	private static void swap(float[] arr, int index1, int index2) {
 		float temp = arr[index1];

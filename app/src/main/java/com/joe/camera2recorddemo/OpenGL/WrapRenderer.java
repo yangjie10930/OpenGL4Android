@@ -27,28 +27,17 @@ class WrapRenderer implements Renderer{
         }
     }
 
+    public OesFilter getmFilter() {
+        return mFilter;
+    }
+
     public void setFlag(int flag){
         if(flag==TYPE_SURFACE){
-            mFilter.setVertexCo(new float[]{
-                    -1.0f, -1.0f,
-                    -1.0f, 1.0f,
-                    1.0f, -1.0f,
-                    1.0f, 1.0f,
-            });
+            mFilter.setVertexCo(MatrixUtils.getSurfaceVertexCo());
         }else if(flag==TYPE_CAMERA){
-            mFilter.setVertexCo(new float[]{
-                    -1.0f, 1.0f,
-                    1.0f, 1.0f,
-                    -1.0f, -1.0f,
-                    1.0f, -1.0f,
-            });
+            mFilter.setVertexCo(MatrixUtils.getCameraVertexCo());
         }else if(flag==TYPE_MOVE){
-            mFilter.setVertexCo(new float[]{
-                    1.0f, -1.0f,
-                    -1.0f, -1.0f,
-                    1.0f, 1.0f,
-                    -1.0f, 1.0f,
-            });
+            mFilter.setVertexCo(MatrixUtils.getMoveVertexCo());
         }
     }
 

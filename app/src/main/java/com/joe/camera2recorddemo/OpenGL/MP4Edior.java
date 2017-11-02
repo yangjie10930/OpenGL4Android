@@ -6,7 +6,9 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
+import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.media.MediaRecorder;
 import android.opengl.EGLSurface;
@@ -17,6 +19,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Surface;
 
+import com.joe.camera2recorddemo.MediaCodecUtil.TrackUtils;
 import com.joe.camera2recorddemo.OpenGL.Filter.BaseFilter;
 import com.joe.camera2recorddemo.OpenGL.Filter.Filter;
 import com.joe.camera2recorddemo.Utils.MatrixUtils;
@@ -29,6 +32,8 @@ import java.util.concurrent.Semaphore;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class MP4Edior {
 
+	//============================  OpenGL =========================
+
 	private SurfaceTexture mInputTexture;
 	private Surface mOutputSurface;
 	//    private EGLHelper mEncodeEGLHelper;
@@ -40,23 +45,35 @@ public class MP4Edior {
 	private Semaphore mSem;
 	private int mInputTextureId;
 
-	private int mPreviewWidth = 0;
-	private int mPreviewHeight = 0;
+	private int mPreviewWidth = -1;
+	private int mPreviewHeight = -1;
+	private int mInputWidth = -1;
+	private int mInputHeight = -1;
 
 	private final Object VIDEO_LOCK = new Object();
 	private final Object REC_LOCK = new Object();
+
+	//===========================  MeidaCodec ========================
+
+	private static final String TAG = "VideoToFrames";
+	private static final long DEFAULT_TIMEOUT_US = 10000;
+
+	private final int decodeColorFormat = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible;
+
+	MediaExtractor extractor = null;
+	MediaCodec decoder = null;
+	MediaFormat mediaFormat;
+
+	private boolean isLoop = false;//是否循环播放
+	private boolean isStop = false;//是否停止
+	private String videoFilePath;
 
 	public MP4Edior() {
 		mShowEGLHelper = new EGLHelper();
 		mSem = new Semaphore(0);
 	}
 
-	public void setPreviewSize(int width, int height) {
-		this.mPreviewWidth = width;
-		this.mPreviewHeight = height;
-	}
-
-	public SurfaceTexture createInputSurfaceTexture() {
+	public Surface createInputSurfaceTexture() {
 		mInputTextureId = mShowEGLHelper.createTextureID();
 		mInputTexture = new SurfaceTexture(mInputTextureId);
 		new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -70,11 +87,13 @@ public class MP4Edior {
 				});
 			}
 		});
-		return mInputTexture;
+		return new Surface(mInputTexture);
 	}
 
-	public void setOutputSurface(Surface surface) {
+	public void setOutputSurface(Surface surface,int width, int height) {
 		this.mOutputSurface = surface;
+		this.mPreviewWidth = width;
+		this.mPreviewHeight = height;
 	}
 
 	public void setRenderer(Renderer renderer) {
@@ -148,4 +167,189 @@ public class MP4Edior {
 			mShowEGLHelper.destroyGLES();
 		}
 	};
+
+	/**
+	 * =====================================    MediaCodec   ===============================
+	 */
+
+	/**
+	 * 解码器初始化
+	 * @param videoFilePath
+	 */
+	public void decodePrepare(String videoFilePath) {
+		this.videoFilePath = videoFilePath;
+		extractor = null;
+		decoder = null;
+		try {
+			File videoFile = new File(videoFilePath);
+			extractor = new MediaExtractor();
+			extractor.setDataSource(videoFile.toString());
+			int trackIndex = TrackUtils.selectVideoTrack(extractor);
+			if (trackIndex < 0) {
+				throw new RuntimeException("No video track found in " + videoFilePath);
+			}
+			extractor.selectTrack(trackIndex);
+			mediaFormat = extractor.getTrackFormat(trackIndex);
+			String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
+			decoder = MediaCodec.createDecoderByType(mime);
+			if (isColorFormatSupported(decodeColorFormat, decoder.getCodecInfo().getCapabilitiesForType(mime))) {
+				mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, decodeColorFormat);
+				Log.i(TAG, "set decode color format to type " + decodeColorFormat);
+			} else {
+				Log.i(TAG, "unable to set decode color format, color format type " + decodeColorFormat + " not supported");
+			}
+
+			//获取宽高信息
+			int rotation = mediaFormat.containsKey(MediaFormat.KEY_ROTATION) ? mediaFormat.getInteger(MediaFormat.KEY_ROTATION) : 0;
+			if (rotation == 90 || rotation == 270) {
+				mInputHeight = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
+				mInputWidth = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
+			} else {
+				mInputWidth = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
+				mInputHeight = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
+			}
+
+			//消除旋转信息，防止拉伸
+			mediaFormat.setInteger(MediaFormat.KEY_ROTATION,0);
+			//设置
+			mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
+			mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
+			mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 2500000);
+			decoder.configure(mediaFormat,createInputSurfaceTexture(), null, 0);
+			decoder.start();
+
+		} catch (IOException ioe) {
+			throw new RuntimeException("failed init encoder", ioe);
+		}
+	}
+
+	public void close() {
+		try {
+			if (decoder != null) {
+				decoder.stop();
+				decoder.release();
+			}
+
+			if (extractor != null) {
+				extractor.release();
+				extractor = null;
+			}
+		}catch (IllegalStateException e){
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 外部调用开始解码
+	 */
+	public void excuate() {
+		try {
+			decodeFramesToImage(decoder, extractor, mediaFormat);
+		} finally {
+			close();
+			if(isLoop && !isStop){
+				decodePrepare(videoFilePath);
+				excuate();
+			}
+		}
+
+	}
+
+	/**
+	 * 设置是否循环
+	 * @param isLoop
+	 */
+	public void setLoop(boolean isLoop){
+		this.isLoop = isLoop;
+	}
+
+	/**
+	 * 检查是否支持的色彩格式
+	 * @param colorFormat
+	 * @param caps
+	 * @return
+	 */
+	private boolean isColorFormatSupported(int colorFormat, MediaCodecInfo.CodecCapabilities caps) {
+		for (int c : caps.colorFormats) {
+			if (c == colorFormat) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 开始解码
+	 * @param decoder
+	 * @param extractor
+	 * @param mediaFormat
+	 */
+	public void decodeFramesToImage(MediaCodec decoder, MediaExtractor extractor, MediaFormat mediaFormat) {
+		MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+		boolean sawInputEOS = false;
+		boolean sawOutputEOS = false;
+
+		long startMs = System.currentTimeMillis();
+		while (!sawOutputEOS && !isStop) {
+			if (!sawInputEOS) {
+				int inputBufferId = decoder.dequeueInputBuffer(DEFAULT_TIMEOUT_US);
+				if (inputBufferId >= 0) {
+					ByteBuffer inputBuffer = decoder.getInputBuffer(inputBufferId);
+					int sampleSize = extractor.readSampleData(inputBuffer, 0); //将一部分视频数据读取到inputbuffer中，大小为sampleSize
+					if (sampleSize < 0) {
+						decoder.queueInputBuffer(inputBufferId, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+						sawInputEOS = true;
+					} else {
+						long presentationTimeUs = extractor.getSampleTime();
+						Log.v(TAG, "presentationTimeUs:"+presentationTimeUs);
+						decoder.queueInputBuffer(inputBufferId, 0, sampleSize, presentationTimeUs, 0);
+						extractor.advance();  //移动到视频文件的下一个地址
+					}
+				}
+			}
+			int outputBufferId = decoder.dequeueOutputBuffer(info, DEFAULT_TIMEOUT_US);
+			if (outputBufferId >= 0) {
+				if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+					sawOutputEOS = true;
+				}
+				boolean doRender = (info.size != 0);
+				if (doRender) {
+					sleepRender(info, startMs);//延迟解码
+					decoder.releaseOutputBuffer(outputBufferId, true);
+				}
+			}
+		}
+	}
+
+	public void stop(){
+		isStop = true;
+	}
+
+	public void start(){
+		isStop = false;
+	}
+
+	/**
+	 * 延迟解码，按帧播放
+	 */
+	private void sleepRender(MediaCodec.BufferInfo audioBufferInfo, long startMs) {
+		while (audioBufferInfo.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+	}
+
+	/**
+	 * 设置缩放类型，这个方法需要放在decodePrepare（）方法后面执行
+	 * @param scaleType
+	 */
+	public void setScale(int scaleType){
+		mRenderer.getmFilter().setVertexCo(
+		TransUtil.resolveScale(mRenderer.getmFilter().getVertexCo()
+		,mInputWidth,mInputHeight,mPreviewWidth,mPreviewHeight,scaleType));
+	}
 }

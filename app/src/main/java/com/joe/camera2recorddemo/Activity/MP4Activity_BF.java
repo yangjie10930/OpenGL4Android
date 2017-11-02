@@ -108,11 +108,11 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 		mWidth = width;
 		mHeight = height;
 		mSurface = new Surface(surface);
-		mp4Edior.setOutputSurface(mSurface);
+		mp4Edior.setOutputSurface(mSurface,width,height);
 		mp4Edior.setRenderer(new Renderer() {
 			@Override
 			public void create() {
-				mVideoDecode.setSurface(new Surface(mp4Edior.createInputSurfaceTexture()));
+//				mVideoDecode.setSurface(new Surface(mp4Edior.createInputSurfaceTexture()));
 				mFilter.create();
 			}
 
@@ -132,14 +132,14 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 				mFilter.destroy();
 			}
 		});
-		mp4Edior.setPreviewSize(width, height);
+//		mp4Edior.setPreviewSize(width, height);
 		mp4Edior.startPreview();
 	}
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
 		Log.v("MP4Activity", "+++onSurfaceTextureSizeChanged+++" + width + "," + height);
-		mp4Edior.setPreviewSize(width, height);
+//		mp4Edior.setPreviewSize(width, height);
 	}
 
 	@Override
