@@ -123,7 +123,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 							textureView.setSurfaceTextureListener(MP4Activity.this);
 							mp4Edior.setLoop(true);
 							mp4Edior.decodePrepare(videoPath);
-							mp4Edior.setScale(Transformation.SCALE_TYPE_CENTER_INSIDE);
+//							mp4Edior.setScale(Transformation.SCALE_TYPE_CENTER_INSIDE);
 							mp4Edior.excuate();
 						}
 					}).start();
