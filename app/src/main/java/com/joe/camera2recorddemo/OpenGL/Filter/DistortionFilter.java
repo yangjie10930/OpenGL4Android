@@ -23,40 +23,6 @@ public class DistortionFilter extends Filter {
 	}
 
 	/**
-	 * 设置旋转
-	 *
-	 * @param rotation
-	 */
-	public void setRotation(int rotation) {
-		initTransformation();
-		mTransformation.setRotation(rotation);
-		setTextureCo(TransUtil.getTransformationCo(mTextureCo, mTransformation));
-	}
-
-	/**
-	 * 设置翻转
-	 *
-	 * @param flip
-	 */
-	public void setFlip(int flip) {
-		initTransformation();
-		mTransformation.setFlip(flip);
-		setTextureCo(TransUtil.getTransformationCo(mTextureCo, mTransformation));
-	}
-
-	/**
-	 * 设置裁剪
-	 *
-	 * @param rect
-	 */
-	public void setCrop(Transformation.Rect rect) {
-		initTransformation();
-		mTransformation.setCrop(rect);
-		setTextureCo(TransUtil.getTransformationCo(mTextureCo, mTransformation));
-	}
-
-
-	/**
 	 * 初始化变化类
 	 */
 	private void initTransformation() {

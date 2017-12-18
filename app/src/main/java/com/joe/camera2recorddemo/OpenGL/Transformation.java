@@ -1,5 +1,7 @@
 package com.joe.camera2recorddemo.OpenGL;
 
+import android.util.Size;
+
 /**
  * Created by Yj on 2017/10/30.
  * 图形旋转，翻转，缩放，裁剪类
@@ -13,21 +15,12 @@ public class Transformation {
     public static final int FLIP_VERTICAL = 2003;
     public static final int FLIP_HORIZONTAL_VERTICAL = 2004;
 
-    public static final int ROTATION_0 = 0;
-    public static final int ROTATION_90 = 90;
-    public static final int ROTATION_180 = 180;
-    public static final int ROTATION_270 = 270;
-
-    public static final int SCALE_TYPE_FIT_XY = 1001;
-    public static final int SCALE_TYPE_CENTER_CROP = 1002;
-    public static final int SCALE_TYPE_CENTER_INSIDE = 1003;
-
-    Rect cropRect = FULL_RECT;
-    int flip = FLIP_NONE;
-    int rotation = ROTATION_0;
-    Size inputSize;
-    Size outputSize;
-    int scaleType;
+    private Rect cropRect = FULL_RECT;
+    private int flip = FLIP_NONE;
+    private int rotation = 0;
+    private Size inputSize;
+    private Size outputSize;
+    private int scaleType = 0;
 
     public void setCrop(Rect cropRect) {
         this.cropRect = cropRect;
@@ -39,6 +32,38 @@ public class Transformation {
 
     public void setRotation(int rotation) {
         this.rotation = rotation;
+    }
+
+    public void setInputSize(Size inputSize) {
+        this.inputSize = inputSize;
+    }
+
+    public void setOutputSize(Size outputSize) {
+        this.outputSize = outputSize;
+    }
+
+    public Rect getCropRect() {
+        return cropRect;
+    }
+
+    public int getFlip() {
+        return flip;
+    }
+
+    public int getRotation() {
+        return rotation;
+    }
+
+    public Size getInputSize() {
+        return inputSize;
+    }
+
+    public Size getOutputSize() {
+        return outputSize;
+    }
+
+    public int getScaleType() {
+        return scaleType;
     }
 
     public void setScale(Size inputSize, Size outputSize, int scaleType) {
@@ -56,16 +81,6 @@ public class Transformation {
         public Rect(final float x, final float y, final float width, final float height) {
             this.x = x;
             this.y = y;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
-    public static class Size {
-        final int width;
-        final int height;
-
-        public Size(final int width, final int height) {
             this.width = width;
             this.height = height;
         }

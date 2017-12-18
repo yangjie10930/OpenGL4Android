@@ -257,7 +257,7 @@ public class Camera2ByMediaCodecFragment extends Fragment
 				public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture,
 													  int width, int height) {
 					mCameraRecord.setOutputSurface(new Surface(surfaceTexture));
-					mCameraRecord.setOutputSize(1024, 768);
+					mCameraRecord.setOutputSize(new Size(768, 1080));
 					mCameraRecord.setRenderer(Camera2ByMediaCodecFragment.this);
 				}
 

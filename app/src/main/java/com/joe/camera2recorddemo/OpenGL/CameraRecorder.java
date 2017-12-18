@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 
 
@@ -92,10 +93,10 @@ public class CameraRecorder {
 		this.mOutputPath = path;
 	}
 
-	public void setOutputSize(int width, int height) {
-		this.mConfig = new Configuration(width, height);
-		this.mOutputWidth = width;
-		this.mOutputHeight = height;
+	public void setOutputSize(Size size) {
+		this.mConfig = new Configuration(size.getWidth(), size.getHeight());
+		this.mOutputWidth = size.getWidth();
+		this.mOutputHeight = size.getHeight();
 	}
 
 	public void setPreviewSize(int width, int height) {
@@ -433,5 +434,4 @@ public class CameraRecorder {
 			return codec.getOutputBuffers()[index];
 		}
 	}
-
 }

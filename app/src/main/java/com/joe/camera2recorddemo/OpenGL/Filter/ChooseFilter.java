@@ -9,10 +9,6 @@ package com.joe.camera2recorddemo.OpenGL.Filter;
 import android.content.res.Resources;
 import android.opengl.GLES20;
 
-import com.joe.camera2recorddemo.OpenGL.TransUtil;
-import com.joe.camera2recorddemo.OpenGL.Transformation;
-import com.joe.camera2recorddemo.Utils.MatrixUtils;
-
 /**
  * 滤镜集合
  */

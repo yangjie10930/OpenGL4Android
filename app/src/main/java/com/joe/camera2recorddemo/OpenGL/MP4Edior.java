@@ -2,26 +2,19 @@ package com.joe.camera2recorddemo.OpenGL;
 
 import android.annotation.TargetApi;
 import android.graphics.SurfaceTexture;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaMuxer;
-import android.media.MediaRecorder;
-import android.opengl.EGLSurface;
 import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 
 import com.joe.camera2recorddemo.MediaCodecUtil.TrackUtils;
-import com.joe.camera2recorddemo.OpenGL.Filter.BaseFilter;
-import com.joe.camera2recorddemo.OpenGL.Filter.Filter;
 import com.joe.camera2recorddemo.Utils.MatrixUtils;
 
 import java.io.File;
@@ -68,6 +61,8 @@ public class MP4Edior {
 	private boolean isStop = false;//是否停止
 	private String videoFilePath;
 
+	private Size mSize;//输入视频的尺寸
+
 	public MP4Edior() {
 		mShowEGLHelper = new EGLHelper();
 		mSem = new Semaphore(0);
@@ -90,7 +85,7 @@ public class MP4Edior {
 		return new Surface(mInputTexture);
 	}
 
-	public void setOutputSurface(Surface surface,int width, int height) {
+	public void setOutputSurface(Surface surface, int width, int height) {
 		this.mOutputSurface = surface;
 		this.mPreviewWidth = width;
 		this.mPreviewHeight = height;
@@ -100,9 +95,11 @@ public class MP4Edior {
 		mRenderer = new WrapRenderer(renderer);
 	}
 
+	/**
+	 * 开始预览
+	 */
 	public void startPreview() {
 		synchronized (REC_LOCK) {
-			Log.d("C2D", "CameraRecorder startPreview");
 			mSem.drainPermits();
 			mGLThreadFlag = true;
 			mGLThread = new Thread(mGLRunnable);
@@ -110,6 +107,11 @@ public class MP4Edior {
 		}
 	}
 
+	/**
+	 * 停止预览
+	 *
+	 * @throws InterruptedException
+	 */
 	public void stopPreview() throws InterruptedException {
 		synchronized (REC_LOCK) {
 			mGLThreadFlag = false;
@@ -174,6 +176,7 @@ public class MP4Edior {
 
 	/**
 	 * 解码器初始化
+	 *
 	 * @param videoFilePath
 	 */
 	public void decodePrepare(String videoFilePath) {
@@ -208,16 +211,14 @@ public class MP4Edior {
 				mInputWidth = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
 				mInputHeight = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
 			}
+			mSize = new Size(mInputWidth, mInputHeight);
 
-			//消除旋转信息，防止拉伸
-			mediaFormat.setInteger(MediaFormat.KEY_ROTATION,0);
 			//设置
 			mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
 			mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
 			mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 2500000);
-			decoder.configure(mediaFormat,createInputSurfaceTexture(), null, 0);
+			decoder.configure(mediaFormat, createInputSurfaceTexture(), null, 0);
 			decoder.start();
-
 		} catch (IOException ioe) {
 			throw new RuntimeException("failed init encoder", ioe);
 		}
@@ -234,7 +235,7 @@ public class MP4Edior {
 				extractor.release();
 				extractor = null;
 			}
-		}catch (IllegalStateException e){
+		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		}
 	}
@@ -247,7 +248,7 @@ public class MP4Edior {
 			decodeFramesToImage(decoder, extractor, mediaFormat);
 		} finally {
 			close();
-			if(isLoop && !isStop){
+			if (isLoop && !isStop) {
 				decodePrepare(videoFilePath);
 				excuate();
 			}
@@ -257,14 +258,16 @@ public class MP4Edior {
 
 	/**
 	 * 设置是否循环
+	 *
 	 * @param isLoop
 	 */
-	public void setLoop(boolean isLoop){
+	public void setLoop(boolean isLoop) {
 		this.isLoop = isLoop;
 	}
 
 	/**
 	 * 检查是否支持的色彩格式
+	 *
 	 * @param colorFormat
 	 * @param caps
 	 * @return
@@ -280,6 +283,7 @@ public class MP4Edior {
 
 	/**
 	 * 开始解码
+	 *
 	 * @param decoder
 	 * @param extractor
 	 * @param mediaFormat
@@ -301,7 +305,7 @@ public class MP4Edior {
 						sawInputEOS = true;
 					} else {
 						long presentationTimeUs = extractor.getSampleTime();
-						Log.v(TAG, "presentationTimeUs:"+presentationTimeUs);
+						Log.v(TAG, "presentationTimeUs:" + presentationTimeUs);
 						decoder.queueInputBuffer(inputBufferId, 0, sampleSize, presentationTimeUs, 0);
 						extractor.advance();  //移动到视频文件的下一个地址
 					}
@@ -321,12 +325,27 @@ public class MP4Edior {
 		}
 	}
 
-	public void stop(){
+	/**
+	 * 停止解码播放
+	 */
+	public void stop() {
 		isStop = true;
 	}
 
-	public void start(){
+	/**
+	 * 开始解码播放
+	 */
+	public void start() {
 		isStop = false;
+	}
+
+	/**
+	 * 获取视频尺寸
+	 *
+	 * @return 视频尺寸
+	 */
+	public Size getSize() {
+		return mSize;
 	}
 
 	/**
@@ -344,12 +363,53 @@ public class MP4Edior {
 	}
 
 	/**
-	 * 设置缩放类型，这个方法需要放在decodePrepare（）方法后面执行
-	 * @param scaleType
+	 * 设置变换类型
+	 *
+	 * @param transformation
 	 */
-	public void setScale(int scaleType){
-		mRenderer.getmFilter().setVertexCo(
-		TransUtil.resolveScale(mRenderer.getmFilter().getVertexCo()
-		,mInputWidth,mInputHeight,mPreviewWidth,mPreviewHeight,scaleType));
+	public void setTransformation(Transformation transformation) {
+		float[] vms = mRenderer.getmFilter().getVertexMatrix();
+		if (transformation.getScaleType() == MatrixUtils.TYPE_CENTERINSIDE) {
+			if (transformation.getRotation() == 90 || transformation.getRotation() == 270) {
+				MatrixUtils.getMatrix(vms, MatrixUtils.TYPE_CENTERINSIDE, transformation.getInputSize().getWidth(), transformation.getInputSize().getHeight()
+						, transformation.getOutputSize().getHeight(), transformation.getOutputSize().getWidth());
+			} else {
+				MatrixUtils.getMatrix(vms, MatrixUtils.TYPE_CENTERINSIDE, transformation.getInputSize().getHeight(), transformation.getInputSize().getWidth()
+						, transformation.getOutputSize().getHeight(), transformation.getOutputSize().getWidth());
+			}
+		}
+
+		//设置旋转
+		if (transformation.getRotation() != 0) {
+			MatrixUtils.rotation(vms, transformation.getRotation());
+		}
+
+		//设置裁剪
+		if (transformation.getCropRect() != null) {
+			float[] vtCo = new float[8];
+			MatrixUtils.crop(vtCo,transformation.getCropRect().x,transformation.getCropRect().y
+					,transformation.getCropRect().width,transformation.getCropRect().height);
+			mRenderer.getmFilter().setTextureCo(vtCo);
+		}
+
+		//设置翻转
+		if (transformation.getFlip() != Transformation.FLIP_NONE) {
+			switch (transformation.getFlip()) {
+				case Transformation.FLIP_HORIZONTAL:
+					MatrixUtils.flip(vms, true, false);
+					break;
+				case Transformation.FLIP_VERTICAL:
+					MatrixUtils.flip(vms, false, true);
+					break;
+				case Transformation.FLIP_HORIZONTAL_VERTICAL:
+					MatrixUtils.flip(vms, true, true);
+					break;
+				default:
+					break;
+			}
+		}
+
+		//设置投影矩阵
+		mRenderer.getmFilter().setVertexMatrix(vms);
 	}
 }

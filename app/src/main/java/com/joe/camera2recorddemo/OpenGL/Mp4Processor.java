@@ -84,6 +84,8 @@ public class Mp4Processor {
 
 	private long mTotalVideoTime = 0;     //视频的总时长
 
+	private int filterRotation = 0;//滤镜的旋转角度
+
 	public Mp4Processor() {
 		mEGLHelper = new EGLHelper();
 		mVideoDecoderBufferInfo = new MediaCodec.BufferInfo();
@@ -109,6 +111,15 @@ public class Mp4Processor {
 	 */
 	public void setOutputPath(String path) {
 		this.mOutputPath = path;
+	}
+
+	/**
+	 * 设置滤镜的旋转角度
+	 *
+	 * @param rotation
+	 */
+	public void setFilterRotation(int rotation) {
+		this.filterRotation = rotation;
 	}
 
 	/**
@@ -171,7 +182,7 @@ public class Mp4Processor {
 					mAudioDecoderTrack = i;
 					//todo 暂时不对音频处理，后续需要对音频处理时再修改这个
 					/*mAudioDecoder=MediaCodec.createDecoderByType(mime);
-                    mAudioDecoder.configure(format,null,null,0);
+					mAudioDecoder.configure(format,null,null,0);
                     if(!isRenderToWindowSurface){
                         Log.e("wuwang", format.toString());
                         MediaFormat audioFormat=MediaFormat.createAudioFormat(mime,
@@ -214,6 +225,13 @@ public class Mp4Processor {
 							mOutputVideoWidth = mInputVideoWidth;
 							mOutputVideoHeight = mInputVideoHeight;
 						}
+						//判断滤镜旋转角度
+						if(filterRotation == 90 || filterRotation == 270){
+							int temp = mOutputVideoWidth;
+							mOutputVideoWidth = mOutputVideoHeight;
+							mOutputVideoHeight = temp;
+						}
+						Log.v("Mp4ProcessorHH","w:"+mOutputVideoWidth+";h:"+mOutputVideoHeight+";r:"+filterRotation);
 						MediaFormat videoFormat = MediaFormat.createVideoFormat(/*mime*/"video/avc", mOutputVideoWidth, mOutputVideoHeight);
 						videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
 						videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, mOutputVideoHeight * mOutputVideoWidth * 5);

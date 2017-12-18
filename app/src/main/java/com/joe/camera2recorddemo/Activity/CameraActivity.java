@@ -14,17 +14,22 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.joe.camera2recorddemo.Adapter.FilterAdapter;
 import com.joe.camera2recorddemo.Entity.FilterChoose;
 import com.joe.camera2recorddemo.OpenGL.CameraRecorder;
 import com.joe.camera2recorddemo.OpenGL.Filter.ChooseFilter;
+import com.joe.camera2recorddemo.OpenGL.Filter.Mp4EditFilter;
 import com.joe.camera2recorddemo.OpenGL.Renderer;
+import com.joe.camera2recorddemo.OpenGL.Transformation;
 import com.joe.camera2recorddemo.R;
 import com.joe.camera2recorddemo.Utils.MatrixUtils;
 import com.joe.camera2recorddemo.View.WheelView.WheelView;
@@ -44,13 +49,15 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 	private Camera mCamera; //相机
 	private Button mTvStart;
 	private boolean isStart = false; //是否开始录像
-	private ChooseFilter mFilter; //基础滤镜
+	private Mp4EditFilter mFilter; //基础滤镜
 	private int mCameraWidth, mCameraHeight;
 	private Camera.Parameters parameters; //相机设置
 	private int mUserCamera = 0;//当前使用的摄像头
 	private String[] mCameraList;//摄像头个数
 
 	private int filterIndex = 0;//当前选择滤镜
+	private Size mSize = new Size(720,1080);
+	private Size mOneSize = new Size(720,720);
 
 	/**
 	 * 延时发送通知开始自动对焦
@@ -76,10 +83,17 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 		setContentView(R.layout.activity_camera);
 		getCameraCount();//获取摄像头个数
 		initWheel();//初始化滤镜选择空间
+		initView();
+	}
+
+	/**
+	 * 初始化
+	 */
+	private void initView(){
 		mTextureView = (TextureView) findViewById(R.id.mTexture);
 		mTvStart = (Button) findViewById(R.id.mTvStart);
 		//设置滤镜
-		mFilter = new ChooseFilter(getResources());
+		mFilter = new Mp4EditFilter(getResources());
 		mCameraRecord = new CameraRecorder();
 
 		mCameraRecord.setOutputPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/temp_cam.mp4");
@@ -88,7 +102,7 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 			public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
 				mCamera = Camera.open(0);
 				mCameraRecord.setOutputSurface(new Surface(surface));
-				mCameraRecord.setOutputSize(768, 1080);
+				mCameraRecord.setOutputSize(mSize);
 				mCameraRecord.setRenderer(CameraActivity.this);
 				mCameraRecord.setPreviewSize(width, height);
 				mCameraRecord.startPreview();
@@ -96,7 +110,7 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 
 			@Override
 			public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+				mCameraRecord.setPreviewSize(width, height);
 			}
 
 			@Override
@@ -147,6 +161,9 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 				break;
 			case R.id.mChange:
 				changeCamera();
+				break;
+			case R.id.mOne:
+				changeScale(true);
 				break;
 		}
 	}
@@ -240,11 +257,27 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 	}
 
 	/**
+	 * 设置显示比例
+	 */
+	private void changeScale(boolean one){
+		if(one){
+			stopPreview();
+			int mTextureViewWidth = mTextureView.getWidth();
+			RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(mTextureViewWidth,mTextureViewWidth);
+			layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT,RelativeLayout.TRUE);
+			mTextureView.setLayoutParams(layoutParams);
+			mCameraRecord.setOutputSize(mOneSize);
+			mCamera = Camera.open(mUserCamera);
+			mCameraRecord.startPreview();
+		}
+	}
+
+	/**
 	 * 切换滤镜
 	 */
 	private void changeFilter(int chooseIndex) {
 		if (chooseIndex != filterIndex) {
-			mFilter.setChangeType(chooseIndex);
+			mFilter.getChooseFilter().setChangeType(chooseIndex);
 		}
 	}
 

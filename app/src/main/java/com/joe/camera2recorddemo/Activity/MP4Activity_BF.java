@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -17,9 +18,11 @@ import com.joe.camera2recorddemo.Adapter.FilterAdapter;
 import com.joe.camera2recorddemo.Entity.FilterChoose;
 import com.joe.camera2recorddemo.MediaCodecUtil.VideoDecode;
 import com.joe.camera2recorddemo.OpenGL.Filter.ChooseFilter;
+import com.joe.camera2recorddemo.OpenGL.Filter.Mp4EditFilter;
 import com.joe.camera2recorddemo.OpenGL.MP4Edior;
 import com.joe.camera2recorddemo.OpenGL.Mp4Processor;
 import com.joe.camera2recorddemo.OpenGL.Renderer;
+import com.joe.camera2recorddemo.OpenGL.Transformation;
 import com.joe.camera2recorddemo.R;
 import com.joe.camera2recorddemo.Utils.MatrixUtils;
 import com.joe.camera2recorddemo.Utils.UriUtils;
@@ -32,14 +35,12 @@ import java.util.List;
 public class MP4Activity_BF extends AppCompatActivity implements View.OnClickListener, TextureView.SurfaceTextureListener {
 
 	private TextureView textureView;
-	private VideoDecode mVideoDecode;
 	private String videoPath;
 	private Surface mSurface;
 
 	//滤镜部分
 	private MP4Edior mp4Edior;
-	private ChooseFilter mFilter; //基础滤镜
-	private int mWidth, mHeight;
+	private ChooseFilter mMp4EditFilter;//滤镜组合
 	private int filterIndex = 0;//当前选择滤镜
 
 	//处理模块
@@ -48,30 +49,27 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_mp4);
+		setContentView(R.layout.activity_mp4_bf);
 		initView();
 		initWheel();
 		openFile();
 	}
 
 	private void initView() {
-		//设置滤镜
+		//初始化滤镜
 		mp4Edior = new MP4Edior();
-		mFilter = new ChooseFilter(getResources());
-		mFilter.setChangeType(0);
-//		mFilter.setRotation(0);
+		mMp4EditFilter = new ChooseFilter(getResources());
+		mMp4EditFilter.setChangeType(0);
+
+		//其他
 		textureView = (TextureView) findViewById(R.id.mp4_ttv);
-		mVideoDecode = new VideoDecode();
 		mProcessor = new Mp4Processor();
 	}
 
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-			case R.id.mp4_open_bt:
-
-				break;
-			case R.id.mp4_exec_bt:
+			case R.id.mp4_bt_save:
 				saveExec();
 				break;
 		}
@@ -84,17 +82,16 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 			if (resultCode == RESULT_OK) {
 				final String path = UriUtils.getRealFilePath(getApplicationContext(), data.getData());
 				if (path != null) {
-					Log.v("MP4Activity", "path:" + path);
 					videoPath = path;
-					mVideoDecode.stop();
+					mp4Edior.stop();
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							mVideoDecode.start();
+							mp4Edior.start();
 							textureView.setSurfaceTextureListener(MP4Activity_BF.this);
-							mVideoDecode.setLoop(true);
-							mVideoDecode.decodePrepare(videoPath);
-							mVideoDecode.excuate();
+							mp4Edior.setLoop(true);
+							mp4Edior.decodePrepare(videoPath);
+							mp4Edior.excuate();
 						}
 					}).start();
 				}
@@ -103,50 +100,49 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 	}
 
 	@Override
-	public void onSurfaceTextureAvailable(final SurfaceTexture surface, int width, int height) {
-		Log.v("MP4Activity", "+++onSurfaceTextureAvailable+++:" + width + "," + height);
-		mWidth = width;
-		mHeight = height;
+	public void onSurfaceTextureAvailable(final SurfaceTexture surface, final int width, final int height) {
+		Log.v("MP4Sur","++onSurfaceTextureAvailable++");
 		mSurface = new Surface(surface);
-		mp4Edior.setOutputSurface(mSurface,width,height);
+		mp4Edior.setOutputSurface(mSurface, width, height);
 		mp4Edior.setRenderer(new Renderer() {
 			@Override
 			public void create() {
-//				mVideoDecode.setSurface(new Surface(mp4Edior.createInputSurfaceTexture()));
-				mFilter.create();
+				mMp4EditFilter.create();
 			}
 
 			@Override
-			public void sizeChanged(int width, int height) {
-				mFilter.sizeChanged(width, height);
-				MatrixUtils.getMatrix(mFilter.getVertexMatrix(), MatrixUtils.TYPE_CENTERCROP, mWidth, mHeight, width, height);
+			public void sizeChanged(int width2, int height2) {
+				mMp4EditFilter.sizeChanged(width2, height2);
+				MatrixUtils.flip(mMp4EditFilter.getVertexMatrix(), true, false);
+				MatrixUtils.rotation(mMp4EditFilter.getVertexMatrix(),180);
 			}
 
 			@Override
 			public void draw(int texture) {
-				mFilter.draw(texture);
+				mMp4EditFilter.draw(texture);
 			}
 
 			@Override
 			public void destroy() {
-				mFilter.destroy();
+				Log.v("MP4Sur","++destroy++");
+				mMp4EditFilter.destroy();
 			}
 		});
-//		mp4Edior.setPreviewSize(width, height);
 		mp4Edior.startPreview();
 	}
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-		Log.v("MP4Activity", "+++onSurfaceTextureSizeChanged+++" + width + "," + height);
-//		mp4Edior.setPreviewSize(width, height);
+		Log.v("MP4Sur","++onSurfaceTextureSizeChanged++");
+		mp4Edior.setOutputSurface(mSurface, width, height);
 	}
 
 	@Override
 	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-		Log.v("MP4Activity", "+++onSurfaceTextureDestroyed+++");
+		Log.v("MP4Sur","++onSurfaceTextureDestroyed++");
 		try {
 			mp4Edior.stopPreview();
+			mMp4EditFilter.destroy();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -155,6 +151,7 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+//		Log.v("MP4Sur","++onSurfaceTextureUpdated++");
 	}
 
 
@@ -191,16 +188,15 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 	 */
 	private void changeFilter(int chooseIndex) {
 		if (chooseIndex != filterIndex) {
-			mFilter.setChangeType(chooseIndex);
+			mMp4EditFilter.setChangeType(chooseIndex);
 		}
 	}
 
 	@Override
-	protected void onDestroy() {
-		mVideoDecode.stop();
-		super.onDestroy();
+	protected void onPause() {
+		mp4Edior.stop();
+		super.onPause();
 	}
-
 
 	/**
 	 * 保存滤镜处理文件
@@ -218,29 +214,29 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 			mProcessor.setInputPath(videoPath);
 			mProcessor.setOutputPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/temp_loc.mp4");
 			mProcessor.setRenderer(new Renderer() {
-				ChooseFilter filter;
+
+				Mp4EditFilter mp4EditFilter;
 
 				@Override
 				public void create() {
-					filter = new ChooseFilter(getResources());
-					filter.setChangeType(filterIndex);
-//					mFilter.setRotation(0);
-					filter.create();
+					mp4EditFilter = new Mp4EditFilter(getResources());
+					mp4EditFilter.getChooseFilter().setChangeType(filterIndex);
+					mp4EditFilter.create();
 				}
 
 				@Override
 				public void sizeChanged(int width, int height) {
-					filter.sizeChanged(width, height);
+					mp4EditFilter.sizeChanged(width, height);
 				}
 
 				@Override
 				public void draw(int texture) {
-					filter.draw(texture);
+					mp4EditFilter.draw(texture);
 				}
 
 				@Override
 				public void destroy() {
-					filter.destroy();
+					mp4EditFilter.destroy();
 				}
 			});
 			mProcessor.setOnCompleteListener(new Mp4Processor.OnProgressListener() {
@@ -271,7 +267,7 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}else{
+		} else {
 			Toast.makeText(this, "请先选择一个视频文件", Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -279,7 +275,7 @@ public class MP4Activity_BF extends AppCompatActivity implements View.OnClickLis
 	/**
 	 * 打开文件
 	 */
-	private void openFile(){
+	private void openFile() {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.setType("video/mp4"); //选择视频 （mp4 3gp 是android支持的视频格式）
 		intent.addCategory(Intent.CATEGORY_OPENABLE);

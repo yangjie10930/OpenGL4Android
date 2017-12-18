@@ -22,6 +22,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v13.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -84,7 +85,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
 //				initCamera2();
 				// 初始化Camera
 				mCameraRecord.setOutputSurface(holder.getSurface());
-				mCameraRecord.setOutputSize(768, 1080);
+				mCameraRecord.setOutputSize(new Size(768, 1080));
 				mCameraRecord.setRenderer(Camera2Activity.this);
 			}
 

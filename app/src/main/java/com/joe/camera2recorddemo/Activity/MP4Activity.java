@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -15,16 +16,14 @@ import android.widget.Toast;
 
 import com.joe.camera2recorddemo.Adapter.FilterAdapter;
 import com.joe.camera2recorddemo.Entity.FilterChoose;
-import com.joe.camera2recorddemo.MediaCodecUtil.VideoDecode;
 import com.joe.camera2recorddemo.OpenGL.Filter.ChooseFilter;
-import com.joe.camera2recorddemo.OpenGL.Filter.DistortionFilter;
-import com.joe.camera2recorddemo.OpenGL.Filter.GroupFilter;
 import com.joe.camera2recorddemo.OpenGL.Filter.Mp4EditFilter;
 import com.joe.camera2recorddemo.OpenGL.MP4Edior;
 import com.joe.camera2recorddemo.OpenGL.Mp4Processor;
 import com.joe.camera2recorddemo.OpenGL.Renderer;
 import com.joe.camera2recorddemo.OpenGL.Transformation;
 import com.joe.camera2recorddemo.R;
+import com.joe.camera2recorddemo.Utils.FormatUtils;
 import com.joe.camera2recorddemo.Utils.MatrixUtils;
 import com.joe.camera2recorddemo.Utils.UriUtils;
 import com.joe.camera2recorddemo.View.WheelView.WheelView;
@@ -42,8 +41,6 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 	//滤镜部分
 	private MP4Edior mp4Edior;
 	private Mp4EditFilter mMp4EditFilter;//滤镜组合
-
-	private int mWidth, mHeight;
 	private int filterIndex = 0;//当前选择滤镜
 
 	//处理模块
@@ -51,9 +48,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	//处理类的参数
 	private Transformation mTransformation;
-	private int rotation = 0;
-	private int flip = Transformation.FLIP_NONE;
-	private float rect = 1.0f;
+	private int rotation = 0;//旋转角度
+	private int flip = Transformation.FLIP_NONE;//翻转类型
+	private Transformation.Rect mRect;//裁剪类
+	private Size mSize,mPreSize;//视频尺寸,预览尺寸
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +68,6 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 		mMp4EditFilter = new Mp4EditFilter(getResources());
 		mMp4EditFilter.getChooseFilter().setChangeType(0);
 		mTransformation = new Transformation();
-		mMp4EditFilter.getDistortionFilter().setTransformation(mTransformation);
 
 		//其他
 		textureView = (TextureView) findViewById(R.id.mp4_ttv);
@@ -83,7 +80,8 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 			case R.id.mp4_bt_rotation:
 				rotation = (rotation + 90) % 360;
 				mTransformation.setRotation(rotation);
-				mMp4EditFilter.getDistortionFilter().setTransformation(mTransformation);
+
+				mp4Edior.setTransformation(mTransformation);
 				Toast.makeText(this, "旋转:" + rotation, Toast.LENGTH_SHORT).show();
 				break;
 			case R.id.mp4_bt_flip:
@@ -92,13 +90,23 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 					flip = Transformation.FLIP_NONE;
 				}
 				mTransformation.setFlip(flip);
-				mMp4EditFilter.getDistortionFilter().setTransformation(mTransformation);
+
+				mp4Edior.setTransformation(mTransformation);
+				Toast.makeText(this, "翻转:" + flip, Toast.LENGTH_SHORT).show();
 				break;
 			case R.id.mp4_bt_crop:
-				rect = (rect -= 0.1f) < 0.3f ? 1.0f : rect;
-				mTransformation.setCrop(new Transformation.Rect(0, 0, rect, rect));
-				mMp4EditFilter.getDistortionFilter().setTransformation(mTransformation);
-				Toast.makeText(this, "裁剪:" + (int) (rect * 100) + "%", Toast.LENGTH_SHORT).show();
+				if (mSize.getHeight() > mSize.getWidth()) {
+					float rc = (float) mSize.getWidth() / mSize.getHeight();
+					Log.v("Mp4Activity", "rc:" + rc);
+					mRect = new Transformation.Rect(0, 0, 1.0f, rc);
+				} else {
+					float rc = (float) mSize.getHeight() / mSize.getWidth();
+					Log.v("Mp4Activity", "rc:" + rc);
+					mRect = new Transformation.Rect(0, 0,  rc,1.0f);
+				}
+				mTransformation.setCrop(mRect);
+				mTransformation.setInputSize(new Size(mSize.getWidth(),mSize.getWidth()));
+				mp4Edior.setTransformation(mTransformation);
 				break;
 			case R.id.mp4_bt_save:
 				saveExec();
@@ -113,7 +121,6 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 			if (resultCode == RESULT_OK) {
 				final String path = UriUtils.getRealFilePath(getApplicationContext(), data.getData());
 				if (path != null) {
-					Log.v("MP4Activity", "path:" + path);
 					videoPath = path;
 					mp4Edior.stop();
 					new Thread(new Runnable() {
@@ -123,7 +130,9 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 							textureView.setSurfaceTextureListener(MP4Activity.this);
 							mp4Edior.setLoop(true);
 							mp4Edior.decodePrepare(videoPath);
-//							mp4Edior.setScale(Transformation.SCALE_TYPE_CENTER_INSIDE);
+							mSize = mp4Edior.getSize();
+							mTransformation.setScale(mSize,mPreSize, MatrixUtils.TYPE_CENTERINSIDE);
+							mp4Edior.setTransformation(mTransformation);
 							mp4Edior.excuate();
 						}
 					}).start();
@@ -133,12 +142,11 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 	}
 
 	@Override
-	public void onSurfaceTextureAvailable(final SurfaceTexture surface, int width, int height) {
-		Log.v("MP4Activity", "+++onSurfaceTextureAvailable+++:" + width + "," + height);
-		mWidth = width;
-		mHeight = height;
+	public void onSurfaceTextureAvailable(final SurfaceTexture surface, final int width, final int height) {
+		Log.v("MP4Sur","++onSurfaceTextureAvailable++");
+		mPreSize = new Size(width,height);
 		mSurface = new Surface(surface);
-		mp4Edior.setOutputSurface(mSurface,width,height);
+		mp4Edior.setOutputSurface(mSurface, width, height);
 		mp4Edior.setRenderer(new Renderer() {
 			@Override
 			public void create() {
@@ -146,9 +154,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 			}
 
 			@Override
-			public void sizeChanged(int width, int height) {
-				mMp4EditFilter.sizeChanged(width, height);
-				MatrixUtils.getMatrix(mMp4EditFilter.getVertexMatrix(), MatrixUtils.TYPE_CENTERCROP, mWidth, mHeight, width, height);
+			public void sizeChanged(int width2, int height2) {
+				mMp4EditFilter.sizeChanged(width2, height2);
+				MatrixUtils.flip(mMp4EditFilter.getVertexMatrix(), true, false);
+				MatrixUtils.rotation(mMp4EditFilter.getVertexMatrix(),90);
 			}
 
 			@Override
@@ -158,6 +167,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 			@Override
 			public void destroy() {
+				Log.v("MP4Sur","++destroy++");
 				mMp4EditFilter.destroy();
 			}
 		});
@@ -166,15 +176,17 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-		Log.v("MP4Activity", "+++onSurfaceTextureSizeChanged+++" + width + "," + height);
-		mp4Edior.setOutputSurface(mSurface,width,height);
+		Log.v("MP4Sur","++onSurfaceTextureSizeChanged++");
+		mPreSize = new Size(width,height);
+		mp4Edior.setOutputSurface(mSurface, width, height);
 	}
 
 	@Override
 	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-		Log.v("MP4Activity", "+++onSurfaceTextureDestroyed+++");
+		Log.v("MP4Sur","++onSurfaceTextureDestroyed++");
 		try {
 			mp4Edior.stopPreview();
+			mMp4EditFilter.destroy();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -183,6 +195,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+//		Log.v("MP4Sur","++onSurfaceTextureUpdated++");
 	}
 
 
@@ -224,11 +237,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 	}
 
 	@Override
-	protected void onDestroy() {
+	protected void onPause() {
 		mp4Edior.stop();
-		super.onDestroy();
+		super.onPause();
 	}
-
 
 	/**
 	 * 保存滤镜处理文件
@@ -245,6 +257,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 			mProcessor.setInputPath(videoPath);
 			mProcessor.setOutputPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/temp_loc.mp4");
+			mProcessor.setFilterRotation(rotation);
 			mProcessor.setRenderer(new Renderer() {
 
 				Mp4EditFilter mp4EditFilter;
@@ -254,7 +267,8 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 					mp4EditFilter = new Mp4EditFilter(getResources());
 					mp4EditFilter.getChooseFilter().setChangeType(filterIndex);
 					Transformation transformation = new Transformation();
-					transformation.setCrop(new Transformation.Rect(0,0,rect,rect));
+					if (mRect != null)
+						transformation.setCrop(mRect);
 					transformation.setFlip(flip);
 					transformation.setRotation(rotation);
 					mp4EditFilter.getDistortionFilter().setTransformation(transformation);

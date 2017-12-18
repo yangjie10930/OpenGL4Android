@@ -25,7 +25,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 				startActivity(new Intent(MainActivity.this,CameraActivity.class));
 				break;
 			case R.id.go_mp4:
-				startActivity(new Intent(MainActivity.this,MP4Activity.class));
+				startActivity(new Intent(MainActivity.this,MP4Activity_BF.class));
 				break;
 		}
 	}
