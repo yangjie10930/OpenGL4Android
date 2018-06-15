@@ -51,7 +51,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 	private int rotation = 0;//旋转角度
 	private int flip = Transformation.FLIP_NONE;//翻转类型
 	private Transformation.Rect mRect;//裁剪类
-	private Size mSize,mPreSize;//视频尺寸,预览尺寸
+	private Size mSize, mPreSize;//视频尺寸,预览尺寸
+
+	//视频信息
+	FormatUtils.VideoFormat videoFormat;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -102,10 +105,10 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 				} else {
 					float rc = (float) mSize.getHeight() / mSize.getWidth();
 					Log.v("Mp4Activity", "rc:" + rc);
-					mRect = new Transformation.Rect(0, 0,  rc,1.0f);
+					mRect = new Transformation.Rect(0, 0, rc, 1.0f);
 				}
 				mTransformation.setCrop(mRect);
-				mTransformation.setInputSize(new Size(mSize.getWidth(),mSize.getWidth()));
+				mTransformation.setInputSize(new Size(mSize.getWidth(), mSize.getWidth()));
 				mp4Edior.setTransformation(mTransformation);
 				break;
 			case R.id.mp4_bt_save:
@@ -122,6 +125,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 				final String path = UriUtils.getRealFilePath(getApplicationContext(), data.getData());
 				if (path != null) {
 					videoPath = path;
+					videoFormat = FormatUtils.getVideoFormat(path);
 					mp4Edior.stop();
 					new Thread(new Runnable() {
 						@Override
@@ -131,7 +135,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 							mp4Edior.setLoop(true);
 							mp4Edior.decodePrepare(videoPath);
 							mSize = mp4Edior.getSize();
-							mTransformation.setScale(mSize,mPreSize, MatrixUtils.TYPE_CENTERINSIDE);
+							mTransformation.setScale(mSize, mPreSize, MatrixUtils.TYPE_CENTERINSIDE);
 							mp4Edior.setTransformation(mTransformation);
 							mp4Edior.excuate();
 						}
@@ -143,8 +147,8 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	@Override
 	public void onSurfaceTextureAvailable(final SurfaceTexture surface, final int width, final int height) {
-		Log.v("MP4Sur","++onSurfaceTextureAvailable++");
-		mPreSize = new Size(width,height);
+		Log.v("MP4Sur", "++onSurfaceTextureAvailable++");
+		mPreSize = new Size(width, height);
 		mSurface = new Surface(surface);
 		mp4Edior.setOutputSurface(mSurface, width, height);
 		mp4Edior.setRenderer(new Renderer() {
@@ -157,7 +161,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 			public void sizeChanged(int width2, int height2) {
 				mMp4EditFilter.sizeChanged(width2, height2);
 				MatrixUtils.flip(mMp4EditFilter.getVertexMatrix(), true, false);
-				MatrixUtils.rotation(mMp4EditFilter.getVertexMatrix(),90);
+				MatrixUtils.rotation(mMp4EditFilter.getVertexMatrix(), 90);
 			}
 
 			@Override
@@ -167,7 +171,7 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 			@Override
 			public void destroy() {
-				Log.v("MP4Sur","++destroy++");
+				Log.v("MP4Sur", "++destroy++");
 				mMp4EditFilter.destroy();
 			}
 		});
@@ -176,14 +180,14 @@ public class MP4Activity extends AppCompatActivity implements View.OnClickListen
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-		Log.v("MP4Sur","++onSurfaceTextureSizeChanged++");
-		mPreSize = new Size(width,height);
+		Log.v("MP4Sur", "++onSurfaceTextureSizeChanged++");
+		mPreSize = new Size(width, height);
 		mp4Edior.setOutputSurface(mSurface, width, height);
 	}
 
 	@Override
 	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-		Log.v("MP4Sur","++onSurfaceTextureDestroyed++");
+		Log.v("MP4Sur", "++onSurfaceTextureDestroyed++");
 		try {
 			mp4Edior.stopPreview();
 			mMp4EditFilter.destroy();

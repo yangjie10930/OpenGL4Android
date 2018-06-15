@@ -65,7 +65,6 @@ public class VideoDecode {
 			mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 2500000);
 			decoder.configure(mediaFormat,mSurface, null, 0);
 			decoder.start();
-
 		} catch (IOException ioe) {
 			throw new RuntimeException("failed init encoder", ioe);
 		}

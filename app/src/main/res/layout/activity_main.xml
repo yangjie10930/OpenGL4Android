@@ -25,6 +25,13 @@
             android:text="滤镜—本地"
             android:onClick="onClick"/>
 
+        <Button
+            android:id="@+id/go_pic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="美化—本地"
+            android:onClick="onClick"/>
+
     </LinearLayout>
 
 </RelativeLayout>

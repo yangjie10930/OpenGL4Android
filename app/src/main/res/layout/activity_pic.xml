@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/adjust_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextureView
+        android:id="@+id/mp4_ttv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#4c000000">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/pic_sk_contrast"
+            android:text="对比度"
+            android:textColor="#fff"/>
+
+        <SeekBar
+            android:id="@+id/pic_sk_contrast"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:max="40"
+            android:progress="10"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/pic_sk_brightness"
+            android:text="亮度"
+            android:textColor="#fff"/>
+
+        <SeekBar
+            android:id="@+id/pic_sk_brightness"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_margin="20dp"
+            android:max="20"
+            android:progress="10"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/pic_sk_saturation"
+            android:layout_below="@+id/pic_sk_saturation"
+            android:text="饱和度"
+            android:textColor="#fff"/>
+
+        <SeekBar
+            android:id="@+id/pic_sk_saturation"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="60dp"
+            android:max="20"
+            android:progress="10"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/pic_sk_vignette"
+            android:layout_below="@+id/pic_sk_vignette"
+            android:text="暗角"
+            android:textColor="#fff"/>
+
+        <SeekBar
+            android:id="@+id/pic_sk_vignette"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="60dp"
+            android:max="75"
+            android:progress="0"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/editchoose_backgroud"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/mp4_bt_save"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:background="@drawable/mp4_save"
+            android:onClick="onClick"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

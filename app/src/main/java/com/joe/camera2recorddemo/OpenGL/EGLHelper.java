@@ -22,8 +22,6 @@ public class EGLHelper {
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
 
-    private EGLSurface mEGLCopySurface;
-
     private EGLContext mShareEGLContext= EGL14.EGL_NO_CONTEXT;
 
     private boolean isDebug=true;
@@ -75,6 +73,7 @@ public class EGLHelper {
                 EGL14.EGL_NONE
         };
 
+        //第二步 获取Display
         //获取默认显示设备，一般为设备主屏幕
         mEGLDisplay= EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
 
@@ -85,6 +84,7 @@ public class EGLHelper {
         log(EGL14.eglQueryString(mEGLDisplay, EGL14.EGL_VERSION));
         log(EGL14.eglQueryString(mEGLDisplay, EGL14.EGL_EXTENSIONS));
 
+        //第三部 选择config
         //获取EGL可用配置
         EGLConfig[] configs = new EGLConfig[1];
         int[] configNum = new int[1];

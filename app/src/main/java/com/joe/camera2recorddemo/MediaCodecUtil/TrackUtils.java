@@ -5,7 +5,7 @@ import android.media.MediaFormat;
 import android.util.Log;
 
 /**
- * Created by 杨杰 on 2017/3/29.
+ * Created by Yj on 2017/3/29.
  */
 
 public class TrackUtils {

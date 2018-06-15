@@ -1,7 +1,9 @@
 package com.joe.camera2recorddemo.Activity;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -11,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -183,7 +186,6 @@ public class CameraActivity extends AppCompatActivity implements Renderer {
 			mCameraAutoFocusCallbackHandler.sendMessageDelayed(new Message(), 1000);
 		}
 		mFilter.create();
-
 	}
 
 	@Override

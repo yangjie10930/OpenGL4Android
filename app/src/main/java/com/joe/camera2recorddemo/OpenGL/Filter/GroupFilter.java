@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 /**
- * Created by Administrator on 2017/9/24 0024.
+ * Created by Yj on 2017/9/24 0024.
  */
 
 public class GroupFilter extends BaseFilter {

@@ -4,7 +4,7 @@ import android.content.res.Resources;
 
 /**
  * 综合滤镜
- * Created by Administrator on 2017/11/1.
+ * Created by Yj on 2017/11/1.
  */
 
 public class Mp4EditFilter extends GroupFilter {

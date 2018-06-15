@@ -38,6 +38,7 @@ public class CameraRecorder {
 	private AudioRecord mAudioRecord;
 	private MediaMuxer mMuxer;
 
+	//音频参数
 	private int mRecordBufferSize = 0;
 	private int mRecordSampleRate = 48000;   //音频采样率
 	private int mRecordChannelConfig = AudioFormat.CHANNEL_IN_STEREO;   //音频录制通道,默认为立体声
@@ -46,7 +47,7 @@ public class CameraRecorder {
 	private SurfaceTexture mInputTexture;
 	private Surface mOutputSurface;
 	private Surface mEncodeSurface;
-	//    private EGLHelper mEncodeEGLHelper;
+
 	private EGLHelper mShowEGLHelper;
 	private Configuration mConfig;
 	private String mOutputPath;
@@ -60,7 +61,6 @@ public class CameraRecorder {
 	private Thread mGLThread;
 	private WrapRenderer mRenderer;
 	private Semaphore mSem;
-	private Semaphore mEncodeSem;
 	private boolean isMuxStarted = false;
 	private int mInputTextureId;
 	private EGLSurface mEGLEncodeSurface = null;

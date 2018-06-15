@@ -17,6 +17,12 @@ import java.io.File;
 
 public class FormatUtils {
 
+	public static class VideoFormat{
+		public int width;
+		public int height;
+		public int rotation;
+	}
+
 	/**
 	 * 获取视频尺寸
 	 *
@@ -47,5 +53,39 @@ public class FormatUtils {
 			e.printStackTrace();
 		}
 		return new Size(mInputWidth, mInputHeight);
+	}
+
+	/**
+	 * 获取视频信息
+	 *
+	 * @param url
+	 * @return
+	 */
+	public static VideoFormat getVideoFormat(String url){
+		VideoFormat videoFormat = new VideoFormat();
+		videoFormat.height = 0;
+		videoFormat.width = 0;
+		MediaExtractor extractor = new MediaExtractor();
+		try {
+			extractor.setDataSource(url);
+			int trackIndex = TrackUtils.selectVideoTrack(extractor);
+			if (trackIndex < 0) {
+				throw new RuntimeException("No video track found in " + url);
+			}
+			extractor.selectTrack(trackIndex);
+			MediaFormat mediaFormat = extractor.getTrackFormat(trackIndex);
+			//获取宽高信息
+			videoFormat.rotation = mediaFormat.containsKey(MediaFormat.KEY_ROTATION) ? mediaFormat.getInteger(MediaFormat.KEY_ROTATION) : 0;
+			if (videoFormat.rotation == 90 || videoFormat.rotation == 270) {
+				videoFormat.height = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
+				videoFormat.width = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
+			} else {
+				videoFormat.width = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
+				videoFormat.height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return videoFormat;
 	}
 }

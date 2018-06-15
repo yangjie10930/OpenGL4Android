@@ -4,7 +4,7 @@ import android.content.res.Resources;
 import android.opengl.GLES20;
 
 /**
- * Created by aiya on 2017/9/18.
+ * Created by Yj on 2017/9/18.
  */
 
 public class BeautyFilter extends Filter {
